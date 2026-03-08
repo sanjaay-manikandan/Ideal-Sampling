@@ -1,3 +1,5 @@
+# NAME: SANJAAY MANIKANDAN M
+# REG NO:212224060231
 # IDEAL, NATURAL, & FLAT-TOP -SAMPLING
 # AIM
 To write a simple Python program for the construction and reconstruction of ideal, natural, and flat-top sampling.
@@ -5,130 +7,162 @@ To write a simple Python program for the construction and reconstruction of idea
 Python IDE with Numpy and Scipy
 # PROGRAM
 ### IDEAL SAMPLING
-```import numpy as np
+```python
+import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import resample
 
-fs = 100
-f = 5
+# Parameters
+fs, f = 100, 5
 t = np.arange(0, 1, 1/fs)
-x = np.sin(2*np.pi*f*t)
 
 # Continuous signal
-plt.figure(figsize=(10, 3))
+x = np.sin(2*np.pi*f*t)
+
+# Impulse sampling
+xs = x
+
+# Reconstruction
+xr = resample(xs, len(t))
+
+# Plot
+plt.figure(figsize=(10,8))
+plt.suptitle("NAME : SANJAAY MANIKANDAN\nREG NO : 212224060231",
+             fontsize=12, fontweight='bold')
+
+plt.subplot(3,1,1)
 plt.plot(t, x)
-plt.title("Continuous Signal")
-plt.grid()
-plt.show()
+plt.title("Continuous Signal (fs = 100 Hz)")
+plt.grid(True)
 
-# Ideal sampling
-plt.figure(figsize=(10, 3))
-plt.stem(t, x)
-plt.title("Ideal Sampling")
-plt.grid()
-plt.show()
+plt.subplot(3,1,2)
+plt.stem(t, xs, basefmt=" ")
+plt.title("Sampled Signal (Impulse Sampling)")
+plt.grid(True)
 
-# Reconstruction (Interpolation)
-t_rec = np.linspace(0, 1, 1000)
-x_rec = np.interp(t_rec, t, x)
-
-plt.figure(figsize=(10, 3))
-plt.plot(t_rec, x_rec)
+plt.subplot(3,1,3)
+plt.plot(t, xr, 'r--')
 plt.title("Reconstructed Signal")
-plt.grid()
+plt.grid(True)
+
+plt.tight_layout(rect=[0,0,1,0.93])
 plt.show()
 ```
 ### NATURAL SAMPLING
-```
-import numpy as np
+```python
 import matplotlib.pyplot as plt
 from scipy.signal import butter, lfilter
 
-t = np.linspace(0,1,1000)
-x = np.cos(2*np.pi*5*t)
+# Parameters
+fs, T, fm, fp = 1000, 1, 5, 50
+t = np.arange(0, T, 1/fs)
 
-p = ((t*50)%1 < 0.5)        # pulse train
-xn = x * p                 # natural sampling
+# Message signal
+m = np.sin(2*np.pi*fm*t)
 
-b,a = butter(4, 10/(0.5*1000))
-xr = lfilter(b, a, xn)
+# Pulse train
+pw = fs // (2*fp)
+p = np.zeros_like(t)
+p[::fs//fp] = 1
+p = np.convolve(p, np.ones(pw), mode='same')
 
-plt.figure(figsize=(10,2))
-plt.plot(t,x)
+# Natural sampling
+nat = m * p
+
+# Reconstruction (LPF)
+b, a = butter(4, 10/(0.5*fs), 'low')
+rec = lfilter(b, a, nat)
+
+# Plot
+plt.figure(figsize=(10,9))
+plt.suptitle("NAME : SANJAAY MANIKANDAN\nREG NO : 212224060231",
+             fontsize=12, fontweight='bold')
+
+plt.subplot(4,1,1)
+plt.plot(t, m)
 plt.title("Message Signal")
-plt.grid()
-plt.show()
+plt.grid(True)
 
-plt.figure(figsize=(10,2))
-plt.plot(t,p)
+plt.subplot(4,1,2)
+plt.plot(t, p)
 plt.title("Pulse Train")
-plt.grid()
-plt.show()
+plt.grid(True)
 
-plt.figure(figsize=(10,2))
-plt.plot(t,xn)
+plt.subplot(4,1,3)
+plt.plot(t, nat)
 plt.title("Natural Sampling")
-plt.grid()
-plt.show()
+plt.grid(True)
 
-plt.figure(figsize=(10,2))
-plt.plot(t,xr)
+plt.subplot(4,1,4)
+plt.plot(t, rec, color='g')
 plt.title("Reconstructed Signal")
-plt.grid()
+plt.grid(True)
+
+plt.tight_layout(rect=[0,0,1,0.93])
 plt.show()
 
 ```
 ### FLAT-TOP SAMPLING
-```
-import numpy as np
+```python
 import matplotlib.pyplot as plt
-from scipy.signal import butter, filtfilt
+from scipy.signal import butter, lfilter
 
-fs = 1000
-t = np.linspace(0, 1, fs)
-x = np.sin(2*np.pi*5*t)
+# Parameters
+fs, T, fm, fp = 1000, 1, 5, 50
+t = np.arange(0, T, 1/fs)
 
-Ts = fs//50                          # sampling interval
-n = np.arange(0, fs, Ts)             # ideal sampling instants
+# Message signal
+m = np.sin(2*np.pi*fm*t)
 
-xh = np.repeat(x[n], Ts)[:fs]        # flat-top (sample & hold)
+# Sampling
+bd = fs // fp
+idx = np.arange(0, len(t), bd)
+flat = np.zeros_like(t)
 
-b, a = butter(4, 10/(0.5*fs))
-xr = filtfilt(b, a, xh)
+for i in idx:
+    flat[i:i+bd//2] = m[i]
 
-plt.figure(figsize=(10,3))
-plt.plot(t, x)
+# Low-pass filter (reconstruction)
+b, a = butter(4, (2*fm)/(0.5*fs), 'low')
+recon = lfilter(b, a, flat)
+
+# Plot
+plt.figure(figsize=(10,9))
+plt.suptitle("NAME : SANJAAY MANIKANDAN\nREG NO : 212224060231",
+             fontsize=12, fontweight='bold')
+
+plt.subplot(4,1,1)
+plt.plot(t, m)
 plt.title("Message Signal")
-plt.grid()
-plt.show()
 
-plt.figure(figsize=(10,3))
-plt.stem(t[n], x[n], basefmt=" ")
-plt.title("Ideal Sampling Instances")
-plt.grid()
-plt.show()
+plt.subplot(4,1,2)
+plt.stem(t[idx], np.ones_like(idx), basefmt=" ")
+plt.title("Sampling Instants")
 
-plt.figure(figsize=(10,3))
-plt.plot(t, xh)
-plt.title("Flat-Top Sampling")
-plt.grid()
-plt.show()
+plt.subplot(4,1,3)
+plt.plot(t, flat)
+plt.title("Flat-Top Sampled Signal")
 
-plt.figure(figsize=(10,3))
-plt.plot(t, xr)
+plt.subplot(4,1,4)
+plt.plot(t, recon, color='g')
 plt.title("Reconstructed Signal")
-plt.grid()
+
+plt.tight_layout(rect=[0,0,1,0.93])
 plt.show()
 ```
 # OUTPUT WAVEFORM
 ### IDEAL SAMPLING
-<img width="450" height="451" alt="image" src="https://github.com/user-attachments/assets/d0868cda-83f2-4780-a528-a7beafadf7e3" />
+
+<img width="989" height="789" alt="image" src="https://github.com/user-attachments/assets/7071af9d-da08-41b1-a472-d80308c6a2a8" />
 
 ### NATURAL SAMPLING
-<img width="491" height="715" alt="image" src="https://github.com/user-attachments/assets/998668fb-1f78-49db-aa94-1d69f27972da" />
+
+<img width="981" height="887" alt="image" src="https://github.com/user-attachments/assets/22f7ffff-b15d-4d77-8797-acf5257c429b" />
 
 
 ### FLAT-TOP SAMPLING
-<img width="527" height="748" alt="image" src="https://github.com/user-attachments/assets/ed97df3b-ad15-457a-a886-d9b6f25639a7" />
+
+<img width="981" height="887" alt="image" src="https://github.com/user-attachments/assets/b12cc6d5-0e25-441b-adce-9d3e4c513f2a" />
 
 
 # RESULT
